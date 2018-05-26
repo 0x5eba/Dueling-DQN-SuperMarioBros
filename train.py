@@ -14,22 +14,17 @@ print('writing results to {}'.format(repr(output_dir)))
 weights_file = '{}/weights.h5'.format(output_dir)
 
 
-
+# build the super mario environment
 env = build_nes_environment()
-
 # build the agent
 agent = DeepQAgent(env)
-# observe frames to fill the replay memory
-agent.observe()
 
-# write some info about the agent's hyperparameters to disk
-with open('{}/agent.py'.format(output_dir), 'w') as agent_file:
-    agent_file.write(repr(agent))
-
+# observe or load the data
+callback = BaseCallback(weights_file)
+agent.load("gym-super-mario-bros-master/screen_capture", callback=callback)
 
 # train the agent
 try:
-    callback = BaseCallback(weights_file)
     agent.train(callback=callback)
 except KeyboardInterrupt:
     print('canceled training')

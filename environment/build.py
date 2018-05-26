@@ -27,8 +27,7 @@ def build_nes_environment(
     # add a reward cache for scoring episodes
     env = RewardChace(env)
     # apply a down-sampler for the given game
-    downsampler = DownsampleEnv.metadata['SuperMarioBros']
-    env = DownsampleEnv(env, image_size, **downsampler)
+    env = DownsampleEnv(env, image_size)
     # clip the rewards in {-1, 0, +1} if the feature is enabled
     if clip_rewards:
         env = ClipRewardEnv(env)

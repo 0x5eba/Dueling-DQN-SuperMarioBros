@@ -1,4 +1,5 @@
 """An implementation of Deep Q-Learning."""
+from os import listdir
 from typing import Callable
 from tqdm import tqdm
 from keras.optimizers import Adam
@@ -9,6 +10,7 @@ from .replay.replay_queue import ReplayQueue
 from .agent import Agent
 from .utils.base_callback import BaseCallback
 import numpy as np
+import os.path
 
 
 # the format string for this objects representation
@@ -22,8 +24,7 @@ _REPR_TEMPLATE = """
     optimizer={},
     exploration_rate={},
     loss={},
-    target_update_freq={},
-    dueling_network={}
+    target_update_freq={}
 )
 """.lstrip()
 
@@ -294,3 +295,54 @@ class DeepQAgent(Agent):
             scores[game] = score
 
         return scores
+
+    def load(self, dir_output: None, replay_size: int=50000, batch_size: int=32, callback: Callable=None) -> None:
+        """
+        Get the data from the human gameplay, created by play_human.py
+
+        Args:
+            dir_output: the directory where the data has been outputed
+            replay_size: the number of random observations to make in case of no dir_output
+            batch_size: the size of the replay history batches
+            callback: an optional callback to get updates about the score, loss
+
+        """
+        if dir_output is None:
+            # observe frames to fill the replay memory            
+            self.observe(replay_size)
+        else:
+            frame_played = 0
+            for game in sorted(listdir(dir_output)):
+                state_path = dir_output + "/" + game + "/episode_0" + "/state2.npy"
+                if os.path.isfile(state_path):
+                    state = np.load(state_path)
+                else:
+                    print("No file stat2.npy found in", state_path)
+                    continue
+                score = 0    
+                loss = 0      
+                unorted_dir = [d for d in listdir(dir_output+"/"+game)]             
+                for directory in sorted(unorted_dir, key=lambda x: int(x.split('_')[-1])):
+                    # load file from the directory
+                    path = dir_output + "/" + game + "/" + directory + "/"
+                    next_state = np.load(path+"state2.npy")
+                    action = np.load(path+"action.npy")
+                    reward = np.load(path+"reward.npy")
+                    # update score
+                    score += reward
+                    # push the memory onto the replay queue
+                    self.queue.push(state, action, reward, False, next_state)
+                    # set the state to the new state
+                    state = next_state
+                    # increment the frame counter
+                    frame_played += 1
+                    # update Q from replay
+                    if frame_played % self.update_frequency == 0:
+                        loss += self._replay(*self.queue.sample(size=batch_size))
+                    # update Target Q from online Q
+                    if frame_played % (self.target_update_freq//100) == 0:
+                        self.target_model.set_weights(self.model.get_weights())
+
+                # pass the score to the callback at the end of the episode
+                if callable(callback):
+                    callback(self, score, loss)

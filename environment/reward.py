@@ -12,7 +12,7 @@ class RewardChace(gym.Wrapper):
         gym.Wrapper.__init__(self, env)
         self._score = 0
         self.env.unwrapped.episode_rewards = []
-
+    
     def step(self, action):
         state, reward, done, info = self.env.step(action)
         self._score += reward

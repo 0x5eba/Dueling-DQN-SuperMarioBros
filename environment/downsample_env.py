@@ -7,14 +7,7 @@ import numpy as np
 class DownsampleEnv(gym.ObservationWrapper):
     """An environment that down-samples frames."""
 
-    metadata = {
-        'SuperMarioBros': {
-            'y': (0, 1),
-            'x': (0, 1)
-        }
-    }
-
-    def __init__(self, env, image_size: tuple, y: int, x: int):
+    def __init__(self, env, image_size: tuple):
         """
         Create a new down-sampler.
         Args:
@@ -24,8 +17,8 @@ class DownsampleEnv(gym.ObservationWrapper):
         """
         gym.ObservationWrapper.__init__(self, env)
         self.image_size = image_size
-        self.y = y
-        self.x = x
+        self.y = (0, 1)
+        self.x = (0, 1)
         self.observation_space = gym.spaces.Box(
             low=0,
             high=255,
@@ -42,7 +35,3 @@ class DownsampleEnv(gym.ObservationWrapper):
         # interpolation method
         frame = cv2.resize(frame, self.image_size)
         return frame[:, :, np.newaxis]
-
-
-# explicitly define the outward facing API of this module
-__all__ = [DownsampleEnv.__name__]

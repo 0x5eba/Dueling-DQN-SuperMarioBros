@@ -4,7 +4,7 @@ from environment.build import build_nes_environment
 import pandas as pd
 import os, sys
 
-PATH_MODEL = "/home/seba/DeepLearning/SuperMario/my_super_mario/playing-mario-with-deep-reinforcement-learning-master/results/SuperMarioBros/DeepQAgent/2018-04-27_08-20"
+PATH_MODEL = ""
 
 # set up the weights file
 weights_file = '{}/weights.h5'.format(PATH_MODEL)
